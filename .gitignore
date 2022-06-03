@@ -7,9 +7,6 @@
 # The directory Mix downloads your dependencies sources to.
 /deps/
 
-# Where third-party dependencies like ExDoc output generated docs.
-/doc/
-
 # Ignore .fetch files in case you like to edit your project deps locally.
 /.fetch
 
@@ -20,5 +17,5 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-equilibrium_cache-*.tar
+eiger_cache-*.tar
 

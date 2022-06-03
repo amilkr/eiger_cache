@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.28.4">
+    <meta name="project" content="Eiger Cache v0.1.0">
+
+    <title>Periodic Self-Rehydrating Cache — Eiger Cache v0.1.0</title>
+    <link rel="stylesheet" href="dist/elixir-b6f1ed5df9b1d42a7309.css" />
+
+    <script src="dist/sidebar_items-9384867b8b.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/app-bd1cb213813bf4825aa2.js"></script>
+
+
+  </head>
+  <body data-type="extras">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+
+<section class="sidebar">
+  <button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+    <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+  </button>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+    <div class="sidebar-projectDetails">
+      <a href="https://github.com/amilkr/eiger_cache" class="sidebar-projectName" translate="no">
+Eiger Cache
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v0.1.0
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/amilkr/eiger_cache/blob/main/README.md#L1" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span>Periodic Self-Rehydrating Cache</span>
+</h1>
+
+<p>This Elixir application implements an in-memory cache based on <a href="https://github.com/eqlabs/recruitment-exercises/blob/master/cache/cache.md">these requirements</a>.</p><p>Find the documentation in the <code class="inline">doc/</code> folder. Once you have a local copy, you can open <code class="inline">doc/index.html</code> in your browser.</p><h2 id="try-it" class="section-heading">
+  <a href="#try-it" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">try-it</p>
+  </a>
+  Try it
+</h2>
+<p>The application API is defined in the <a href="Cache.html"><code class="inline">Cache</code></a> module.</p><pre><code class="makeup console" translate="no"><span class="gp unselectable">$ </span><span class="">mix deps.get
+</span><span class="">Resolving Hex dependencies...
+</span><span class="">Dependency resolution completed:
+</span><span class="">...
+</span><span class="">
+</span><span class="gp unselectable">$ </span><span class="">iex -S mix
+</span><span class="">iex(1)&gt; Cache.register_function(fn -&gt; {:ok, length(Process.list)} end, :proc_count, 120_000, 60_000)
+</span><span class="">:ok
+</span><span class="">iex(2)&gt; Cache.get(:proc_count)
+</span><span class="">{:ok, 108}
+</span><span class="">iex(3)&gt; Cache.get(:foo) # no registered key
+</span><span class="">{:error, :not_registered}
+</span><span class="">iex(4)&gt; Cache.register_function(fn -&gt; {:ok, :timer.sleep(30_000)} end, :slow_fn, 120_000, 60_000)
+</span><span class="">:ok
+</span><span class="">iex(5)&gt; Cache.get(:slow_fn, 1000) # timeout for slow executions
+</span><span class="">{:error, :timeout}
+</span><span class="">
+</span></code></pre><h2 id="run-credo-tests-and-coverage" class="section-heading">
+  <a href="#run-credo-tests-and-coverage" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">run-credo-tests-and-coverage</p>
+  </a>
+  Run credo, tests and coverage
+</h2>
+<pre><code class="makeup console" translate="no"><span class="gp unselectable">$ </span><span class="">mix credo --strict
+</span><span class="">Checking 10 source files ...
+</span><span class="">
+</span><span class="">Please report incorrect results: https://github.com/rrrene/credo/issues
+</span><span class="">
+</span><span class="">Analysis took 0.1 seconds (0.04s to load, 0.1s running 64 checks on 10 files)
+</span><span class="">26 mods/funs, found no issues.
+</span></code></pre><pre><code class="makeup console" translate="no"><span class="gp unselectable">$ </span><span class="">mix coveralls
+</span><span class="">===&gt; Compiling parse_trans
+</span><span class="">...
+</span><span class="">==&gt; eiger_cache
+</span><span class="">Compiling 5 files (.ex)
+</span><span class="">Generated eiger_cache app
+</span><span class="">.........
+</span><span class="">
+</span><span class="">Finished in 1.7 seconds
+</span><span class="">9 tests, 0 failures
+</span><span class="">
+</span><span class="">Randomized with seed 471308
+</span><span class="">----------------
+</span><span class="">COV    FILE                                        LINES RELEVANT   MISSED
+</span><span class="">100.0% lib/cache.ex                                   70        3        0
+</span><span class="">100.0% lib/cache/application.ex                       13        1        0
+</span><span class="">100.0% lib/cache/store.ex                             58        6        0
+</span><span class="">100.0% lib/cache/supervisor.ex                        48        5        0
+</span><span class="">100.0% lib/cache/worker.ex                           129       17        0
+</span><span class="">[TOTAL] 100.0%
+</span><span class="">----------------
+</span></code></pre>
+<div class="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="api-reference.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+API Reference
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+  </div>
+</div>
+
+      <footer class="footer">
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.28.4) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>

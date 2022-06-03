@@ -1,18 +1,25 @@
 defmodule Cache.Supervisor do
   @moduledoc """
   Main Supervisor.
-  It's a Dynamic Supervisor responsible for starting and monitoring Worker processes.
+
+  It's a Dynamic Supervisor responsible for starting and monitoring `Cache.Worker` processes.
   """
 
   use DynamicSupervisor
 
   @type start_child_result :: :ok | {:error, :already_registered}
 
+  @doc """
+  Starts the `Supervisor` process.
+  """
   @spec start_link() :: {:ok, pid()} | {:error, any()}
-  def start_link() do
+  def start_link do
     DynamicSupervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 
+  @doc """
+  Starts a `Cache.Worker` process as a child.
+  """
   @spec start_child(
           fun :: (() -> {:ok, any()} | {:error, any()}),
           key :: any,

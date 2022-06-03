@@ -3,15 +3,25 @@ defmodule Cache.MixProject do
 
   def project do
     [
-      app: :equilibrium_cache,
+      app: :eiger_cache,
       version: "0.1.0",
-      elixir: "~> 1.9",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [coveralls: :test],
+
+      # Docs
+      name: "Eiger Cache",
+      source_url: "https://github.com/amilkr/eiger_cache",
+      homepage_url: "https://github.com/amilkr/eiger_cache",
+      docs: [
+        main: "Cache",
+        extras: ["README.md"]
+      ]
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger],
@@ -19,6 +29,11 @@ defmodule Cache.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
-  defp deps, do: []
+  defp deps do
+    [
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.10", only: :test},
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false}
+    ]
+  end
 end

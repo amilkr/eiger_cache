@@ -1,10 +1,20 @@
 defmodule Cache.Worker do
   @moduledoc """
-  Implements the process worker (as a gen_sever) for each registered function.
+  Implements the process worker (as a `Genserver`) spawned for each registered function.
+
+  The workers are responsible for running the registered functions every `:refresh_interval` and
+  for updating the `Cache.Store` every time the functions returns a valid response (`{:ok, any()}`).
+
+  The workers can also notify other processes about the next function result (See  [`await_result/2`](#await_result/2)).
   """
   require Logger
 
   use GenServer
+
+  @type await_result_response ::
+          {:ok, any()}
+          | {:error, :timeout}
+          | {:error, :not_registered}
 
   @doc """
   It spawns a new worker that will execute the registered :fun every :refresh_interval,
@@ -20,14 +30,34 @@ defmodule Cache.Worker do
     GenServer.start_link(__MODULE__, args, name: {:global, args.key})
   end
 
-  @spec await_result(
-          key :: any(),
-          timeout :: non_neg_integer()
-        ) :: {:ok, any()} | {:error, :timeout | :not_registered}
+  @doc """
+  It asks the worker for the next execution result.
+
+  If there's not worker identified with `key`, it returns `{:error, :not_registered}`.
+
+  If the worker doesn't finish the execution before the `timeout` passes (in milliseconds),
+  the function returns `{:error, :timeout}`.
+
+  Notes:
+    * At the moment of sending the `:await_result` to the worker, the worker might be
+      either waiting to run the next execution or in the middle of it.
+      In both cases, the response will be the same.
+      In other words, it doesn't matter if the execution is in progress.
+      The important thing is if the worker finishes the execution before the timeout passes.
+
+    * If the execution doesn't finish before the timeout, this function returns `{:error, :timeout}`.
+      But, the worker (after a successfull execution) will send the reply to the caller anyways.
+      So, the reply will remain in the caller's mailbox.
+  """
+  @spec await_result(key :: any(), timeout :: non_neg_integer()) :: await_result_response
   def await_result(key, timeout) do
     case :global.whereis_name(key) do
       pid when is_pid(pid) ->
-        GenServer.call(pid, :await_result, timeout)
+        try do
+          GenServer.call(pid, :await_result, timeout)
+        catch
+          :exit, {:timeout, _} -> {:error, :timeout}
+        end
 
       :undefined ->
         {:error, :not_registered}
@@ -44,7 +74,7 @@ defmodule Cache.Worker do
 
   @impl true
   def handle_call(:await_result, from, state) do
-    state = Map.update!(state, :clients_awaiting_result, &([from | &1]))
+    state = Map.update!(state, :clients_awaiting_result, &[from | &1])
 
     {:noreply, state}
   end
@@ -90,10 +120,10 @@ defmodule Cache.Worker do
         Process.send(self(), {:notify_result, result}, [])
 
       {:error, reason} ->
-        Logger.warn("#{inspect(state.key)} failed with reason: #{inspect(reason)}")
+        Logger.debug("Worker with key #{inspect(state.key)} failed with reason: #{inspect(reason)}")
 
       error ->
-        Logger.error("#{inspect(state.key)} returned an invalid result: #{inspect(error)}")
+        Logger.debug("Worker with key #{inspect(state.key)} returned an invalid result: #{inspect(error)}")
     end
   end
 end

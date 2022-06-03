@@ -1,14 +1,22 @@
 defmodule Cache do
   @moduledoc """
-  Application API
+  Application API.
+
+  It implements the 2 functions to register a function and to get a cached value.
   """
 
-  @type register_function_result :: :ok | {:error, :already_registered}
+  @type register_function_result ::
+          :ok
+          | {:error, :already_registered}
 
-  @type get_result :: {:ok, any()} | {:error, :timeout} | {:error, :not_registered}
+  @type get_result ::
+          {:ok, any()}
+          | {:error, :timeout}
+          | {:error, :not_registered}
 
-  @doc ~s"""
+  @doc """
   Registers a function that will be computed periodically to update the cache.
+
   Arguments:
     - `fun`: a 0-arity function that computes the value and returns either
       `{:ok, value}` or `{:error, reason}`.
@@ -20,24 +28,22 @@ defmodule Cache do
       recomputed and the new value stored. `refresh_interval` must be strictly
       smaller than `ttl`. After the value is refreshed, the `ttl` counter is
       restarted.
-  The value is stored only if `{:ok, value}` is returned by `fun`. If `{:error,
-  reason}` is returned, the value is not stored and `fun` must be retried on
-  the next run.
   """
   @spec register_function(
           fun :: (() -> {:ok, any()} | {:error, any()}),
-          key :: any,
+          key :: any(),
           ttl :: non_neg_integer(),
           refresh_interval :: non_neg_integer()
         ) :: register_function_result
   def register_function(fun, key, ttl, refresh_interval)
-      when is_function(fun, 0) and is_integer(ttl) and ttl > 0 and is_integer(refresh_interval) and
-             refresh_interval < ttl do
+      when is_function(fun, 0) and is_integer(ttl) and ttl > 0 and
+             is_integer(refresh_interval) and refresh_interval < ttl do
     Cache.Supervisor.start_child(fun, key, ttl, refresh_interval)
   end
 
-  @doc ~s"""
+  @doc """
   Get the value associated with `key`.
+
   Details:
     - If the value for `key` is stored in the cache, the value is returned
       immediately.
@@ -58,10 +64,7 @@ defmodule Cache do
         {:ok, value}
 
       {:error, :not_found} ->
-        case Cache.Worker.await_result(key, timeout) do
-          {:ok, value} -> {:ok, value}
-          {:error, reason} -> {:error, reason}
-        end
+        Cache.Worker.await_result(key, timeout)
     end
   end
 end
